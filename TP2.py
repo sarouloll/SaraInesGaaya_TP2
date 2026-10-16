@@ -1,41 +1,43 @@
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QFileDialog
-from PySide6.QtCore import Qt
-from PySide6 import QtWidgets
-from pathlib import Path
-# import maya.cmds as cmds
 import sys
 import json
-
+import maya.cmds as cmds
+from pathlib import Path
+from PySide6.QtCore import Qt
+from PySide6 import QtWidgets
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QFileDialog
 
 
 class MessageBoard(QWidget):
+
     def __init__(self): # Constructeur
         super().__init__()  # Constructeur QWidget
+
         self.setWindowTitle("Outliner Organiser")
 
         self.create_ui()
         self.create_json_find()
         self.create_checkbox()
-        self.create_button()
+        self.button()
         
     def create_ui(self):
         self.layout = QVBoxLayout(self)
         label = QLabel("Enter JSON path")
         self.layout.addWidget(label)
-        
+
         self.message = QtWidgets.QLineEdit()
         self.message.setFixedSize(400, 40)
         self.layout.addWidget(self.message)
+
 
     def create_json_find(self):
         #faire bouton qui ouvre explorateur de fichier
         json_button = QtWidgets.QPushButton()
         self.layout.addWidget(json_button)
         json_button.setText("Find JSON in file explorer")
+        json_button.clicked.connect(self.load_json)
 
-        json_button.clicked.connect(self.create_on_click_json)
         
-    def create_on_click_json(self):
+    def load_json(self):
         json_path, _ = QFileDialog.getOpenFileName(None, "Select JSON file","", 
                                                     "Fichiers JSON (*.json)")
         if json_path:
@@ -46,7 +48,6 @@ class MessageBoard(QWidget):
                     self.data = json.load(fichier)
                     # Affiche le path obtenu dans la zone de texte
                     self.message.setText(str(self.path))
-
 
             # Erreur si incapable de lire le fichier
             except json.JSONDecodeError:
@@ -66,9 +67,8 @@ class MessageBoard(QWidget):
     def button(self):
         button = QtWidgets.QPushButton()
         self.layout.addWidget(button)
-        button.setText("OK")
+        button.setText("APPLY")
 
-        #button.clicked.connect(self.on_click)
      
     def create_checkbox(self):
         # Nom et configuration des checkbox
@@ -82,22 +82,57 @@ class MessageBoard(QWidget):
         self.layout.addWidget(self.checkbox_reorder)
 
 
-    # def reorder_outliner(self):
-    #     print ("reorder stuff")
-    #     #for i in range(len(self.data)):
-
-    # def color_outliner(self):
-    #     print ("change color")
-
-    # def selected_outliner(self):
-    #     print ("if selected stuff")
-            
 
     def verify_checkbox(self):
-        if self.button.clicked.connect(self.button):
+        #if self.button.clicked.connect(self.button):
+        if self.checkbox_selected.isChecked():
+            
+            objects = cmds.ls(selection=True, type="transform", long=True) or []
+        else:
+            objects = cmds.ls(type="transform", long=True) or []
 
-            self.checkbox_selected.setCheckState(Qt.CheckState.Checked)
+            #return objects
 
+        if self.checkbox_reorder.isChecked():
+            self.reorder_maya(objects)
+        if self.checkbox_color.isChecked():
+            self.color_maya(objects)
+
+
+    def selected_maya(self, objects):
+        # Get selected objects
+        selected_objects = cmds.ls(select=True)
+
+        if not selected_objects:
+            print("No objects selected.")
+            return
+
+
+    # def reorder_maya(json_path):
+    #     #for prefix in mapping.items():
+    #         #item = data[i]
+    #         #cmds.SM (ch=True, o=True, r=1.3)
+    #         #select -r SM_
+    #         #QSortFilterProxyModel
+    #     for i in data(json):
+    #         prefix = ("SM_", "FX_", "LGT_")
+
+    def color_maya(self):
+        #for obj in cmds.ls(type='transform'):
+        prefix = self.data
+        #cmds.ls( 'SM_', ap=True )
+        for obj in object:
+            # Extract base name
+            base_name = obj.split("|")[-1] 
+
+            for prefix, rgb in prefix.items():
+                if base_name.startswith(prefix): 
+                    #cmds.select(obj)
+                    #cmds.hyperShade(outlinerColor=[1, 0, 0])
+                    cmds.setAttr(obj + ".useOutlinerColor", 1)
+                    cmds.setAttr(obj + ".outlinerColor", rgb[0], rgb[1], rgb[2], type="double3")
+
+###CTRLz
 
 def main():
     global widget
