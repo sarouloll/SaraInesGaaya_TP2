@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QFileDialog
 
 class MessageBoard(QWidget):
 
+
     def __init__(self): # Constructeur
         super().__init__()  # Constructeur QWidget
         self.data = None
@@ -23,6 +24,7 @@ class MessageBoard(QWidget):
 
         
     def create_ui(self):
+        # Création de l'interface principale
         self.layout = QVBoxLayout(self)
         label = QLabel("Enter JSON path")
         self.layout.addWidget(label)
@@ -41,6 +43,7 @@ class MessageBoard(QWidget):
 
         
     def load_json(self):
+        # Ouverture/interpretation du fichier JSON
         json_path, _ = QFileDialog.getOpenFileName(None, "Select JSON file","", 
                                                     "Fichiers JSON (*.json)")
         if json_path:
@@ -89,37 +92,39 @@ class MessageBoard(QWidget):
         self.layout.addWidget(self.checkbox_reorder)
 
 
+    # Fonction principale
     def verify_checkbox(self):
         cmds.undoInfo(openChunk=True) # CTRL Z 
+        
+        try:
+            # Activation de la sélection
+            if self.checkbox_selected.isChecked():
+                objects = cmds.ls("SM_*", "FX_*", "LGT_*", selection=True)
 
-        # Activation de la sélection
-        if self.checkbox_selected.isChecked():
-            objects = cmds.ls("SM_*", "FX_*", "LGT_*", selection=True)
+            else:
+                objects = cmds.ls("SM_*", "FX_*", "LGT_*")
 
-        else:
-            objects = cmds.ls("SM_*", "FX_*", "LGT_*")
+            #Main logic de couleurs
+            if self.checkbox_color.isChecked():
+                prefix = self.data
 
-        #Main logic de couleurs
-        if self.checkbox_color.isChecked():
-            prefix = self.data
+                for obj in objects:
 
-            for obj in objects:
+                    for prefix, rgb in self.data.items():
 
-                for prefix, rgb in self.data.items():
+                        if obj.startswith(prefix):
+                            cmds.setAttr(obj + ".useOutlinerColor", 1)
+                            cmds.setAttr(obj + ".outlinerColor", rgb[0], rgb[1], rgb[2], type="double3")
 
-                    if obj.startswith(prefix):
-                        cmds.setAttr(obj + ".useOutlinerColor", 1)
-                        cmds.setAttr(obj + ".outlinerColor", rgb[0], rgb[1], rgb[2], type="double3")
-
-
-        if self.checkbox_reorder.isChecked():
-            objects = sorted(objects)
+            # Logique de reorganisation
+            if self.checkbox_reorder.isChecked():
+                objects = sorted(objects)
             
-            for obj in reversed(objects):
-                cmds.reorder(obj, front=True) 
+                for obj in reversed(objects):
+                    cmds.reorder(obj, front=True) 
 
-        cmds.undoInfo(closeChunk=True) # CTRL Z
-
+        finally:
+            cmds.undoInfo(closeChunk=True) # CTRL Z
 
 
 def main():
